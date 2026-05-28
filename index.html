@@ -94,7 +94,7 @@
   .mode-btn { padding: 9px 16px; background: none; border: none; color: var(--text-muted); font-family: 'Noto Sans KR', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
   .mode-btn.active { background: var(--gold); color: #fff; font-weight: 600; }
 
-  .search-tab-layout { display: grid; grid-template-columns: 300px 1fr 1fr; width: 100%; height: 100%; }
+  .search-tab-layout { display: grid; grid-template-columns: 300px 1fr 1fr; grid-template-rows: auto 1fr; width: 100%; height: 100%; }
 
   .list-panel { border-right: 1px solid var(--border); overflow-y: auto; background: var(--surface); scrollbar-width: thin; scrollbar-color: var(--border) transparent; height: 100%; }
   .result-info { padding: 10px 16px; font-size: 11px; color: var(--text-dim); border-bottom: 1px solid var(--border); background: var(--accent-bg); position: sticky; top: 0; z-index: 1; }
@@ -319,7 +319,7 @@
 <div class="tab-content active" id="tab-search">
   <div class="search-tab-layout">
     <!-- 검색창은 탭 안에 -->
-    <div style="grid-column: 1/-1; padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 10px;">
+    <div style="grid-column: 1/-1; grid-row: 1; flex-shrink: 0; padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 10px;">
       <div class="search-box" style="flex:1; position:relative;">
         <span class="search-icon">🔍</span>
         <input type="text" id="searchInput" placeholder="찬양 제목 또는 가사로 검색..." autocomplete="off">
