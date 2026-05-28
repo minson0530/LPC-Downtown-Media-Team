@@ -39,6 +39,25 @@
   .page-subtitle { font-size: 12px; color: var(--text-muted); font-weight: 400; }
   .song-count-badge { font-size: 12px; color: var(--text-muted); background: var(--surface2); border: 1px solid var(--border); padding: 4px 12px; border-radius: 20px; }
 
+  .verse-bar {
+    padding: 10px 0 2px;
+    border-top: 1px solid var(--border);
+    margin-top: 10px;
+  }
+  .verse-text {
+    font-size: 14px;
+    color: var(--text);
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+  .verse-ref {
+    font-size: 12px;
+    color: var(--gold);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
   /* 탭 */
   .tabs {
     display: flex;
@@ -307,6 +326,10 @@
     </div>
     <span class="song-count-badge" id="totalCount"></span>
   </div>
+  <div class="verse-bar" id="verseBar" style="display:none">
+    <div class="verse-text" id="verseText"></div>
+    <div class="verse-ref" id="verseRef"></div>
+  </div>
 </header>
 
 <!-- 탭 -->
@@ -490,7 +513,7 @@ function selectSong(idx) {
 function loadToEditor() {
   if (!currentSong) return;
   const lines = currentSong.lyrics.split('\n');
-  let result = '';
+  let result = currentSong.title + '\n\n';
   let buf = [];
 
   function flush() {
@@ -521,7 +544,7 @@ function copyEditor() {
 }
 
 function clearEditor() {
-  if (document.getElementById('editor').value && confirm('편집 내용을 지울까요?')) document.getElementById('editor').value = '';
+  document.getElementById('editor').value = '';
 }
 
 // ===== 새 찬양 탭 =====
@@ -544,7 +567,9 @@ function convertLyrics() {
     blocks = byBlank;
   }
 
-  segments = blocks.map((b, i) => ({ lines: b, label: '' }));
+  const title = document.getElementById('newSongTitle').value.trim();
+  segments = blocks.map((b, i) => ({ lines: b, label: '', isTitle: false }));
+  if (title) segments.unshift({ lines: title, label: '', isTitle: true });
   renderSegments();
 }
 
@@ -555,13 +580,23 @@ function renderSegments() {
     return;
   }
 
+  let paraIdx = 0;
   area.innerHTML = segments.map((seg, i) => {
-    const opts = LABEL_OPTIONS.map(l => `<option value="${l}" ${seg.label===l?'selected':''}>${l}</option>`).join('');
-    const preview = seg.lines.split('\n').slice(0,2).join('\n');
     const displayText = seg.lines.replace(/</g,'&lt;');
+    if (seg.isTitle) {
+      return `<div class="segment-card" style="border-color: var(--gold); background: var(--gold-light);">
+        <div class="segment-header" style="background: var(--gold-light);">
+          <span class="segment-label" style="color: var(--gold); font-weight: 700;">제목</span>
+          <span style="font-size: 11px; color: var(--text-muted);">레이블 없음 (첫 슬라이드)</span>
+        </div>
+        <div class="segment-body" style="font-weight: 500;">${displayText}</div>
+      </div>`;
+    }
+    paraIdx++;
+    const opts = LABEL_OPTIONS.map(l => `<option value="${l}" ${seg.label===l?'selected':''}>${l}</option>`).join('');
     return `<div class="segment-card">
       <div class="segment-header">
-        <span class="segment-label">단락 ${i+1}</span>
+        <span class="segment-label">단락 ${paraIdx}</span>
         <select class="label-select" onchange="setLabel(${i}, this.value)">
           <option value="">-- 레이블 선택 --</option>
           ${opts}
@@ -584,9 +619,9 @@ function resetSegments() {
 }
 
 function buildOutput() {
-  const title = document.getElementById('newSongTitle').value.trim();
   let result = '';
   for (const seg of segments) {
+    if (seg.isTitle) { result += seg.lines + '\n\n'; continue; }
     if (seg.label === '없음(제거)') continue;
     if (seg.label) result += seg.label + '\n';
     const lines = seg.lines.split('\n').filter(l => l.trim());
@@ -621,6 +656,18 @@ document.getElementById('searchInput').addEventListener('input', e => {
 });
 
 renderList('');
+
+// Load verse of the day
+fetch('verses.json')
+  .then(r => r.json())
+  .then(verses => {
+    const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    const v = verses[dayOfYear % verses.length];
+    document.getElementById('verseText').textContent = '"' + v.text + '"';
+    document.getElementById('verseRef').textContent = '— ' + v.reference;
+    document.getElementById('verseBar').style.display = 'block';
+  })
+  .catch(() => {});
 </script>
 </body>
 </html>
